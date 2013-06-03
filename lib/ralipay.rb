@@ -138,7 +138,7 @@ module Ralipay
     def notify_verify? posts
       if Notify.new.notify_verify? posts
         #解密并解析返回参数的xml
-        xml    = Ralipay::Common::decrypt posts[:notify_data]
+        xml    = $global_configs[:secure_type] == 'RSA' ? Ralipay::Common::decrypt(posts[:notify_data]) : posts[:notify_data]
         doc    = Nokogiri::XML xml
         status = doc.xpath('/notify/trade_status').text
         #获得可信的交易状态
@@ -154,7 +154,7 @@ module Ralipay
     def notify_verify posts
       if Notify.new.notify_verify? posts
         #解密并解析返回参数的xml
-        xml    = Ralipay::Common::decrypt posts[:notify_data]
+        xml    = $global_configs[:secure_type] == 'RSA' ? Ralipay::Common::decrypt(posts[:notify_data]) : posts[:notify_data]
         doc    = Nokogiri::XML xml
         status = doc.xpath('/notify/trade_status').text
         #获得可信的交易状态
