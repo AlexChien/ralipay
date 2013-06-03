@@ -95,8 +95,9 @@ class Service
       kv_array = str.split('=',2)
       data_hash[kv_array[0]] = kv_array[1]
     }
+
     #私钥解密
-    data_hash['res_data'] = Ralipay::Common::decrypt data_hash['res_data']
+    data_hash['res_data'] = Ralipay::Common::decrypt data_hash['res_data'] if $global_configs[:secure_type] == 'RSA'
     #获取返回的RSA签名
     sign = data_hash['sign']
     #去sign,准备验签

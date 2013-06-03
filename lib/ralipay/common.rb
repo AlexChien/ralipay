@@ -50,18 +50,25 @@ module Ralipay::Common
   #MD5签名
   def self.md5_sign(for_sign_string)
     #@todo md5签名方法
+    signature = Digest::MD5.hexdigest("#{for_sign_string}#{$global_configs[:key]}")
   end
 
   #验签
   def self.verify? for_sign_string, signed_string
-    #读取公钥文件
-    rsa_public_key_file = File.read($global_configs[:rsa_public_key_path])
-    #转换为RSA对象
-    openssl_public = OpenSSL::PKey::RSA.new rsa_public_key_file
-    #生成SHA1密钥串
-    digest = OpenSSL::Digest::SHA1.new
-    #openssl验证签名
-    openssl_public.verify(digest, Base64.decode64(signed_string), for_sign_string)
+    if $global_configs[:secure_type] == 'RSA'
+      #读取公钥文件
+      rsa_public_key_file = File.read($global_configs[:rsa_public_key_path])
+      #转换为RSA对象
+      openssl_public = OpenSSL::PKey::RSA.new rsa_public_key_file
+      #生成SHA1密钥串
+      digest = OpenSSL::Digest::SHA1.new
+      #openssl验证签名
+      openssl_public.verify(digest, Base64.decode64(signed_string), for_sign_string)
+    elsif $global_configs[:secure_type] == 'MD5'
+      Digest::MD5.hexdigest("#{for_sign_string}#{$global_configs[:key]}") == signed_string
+    else
+      false
+    end
   end
 
   #除去数组中的空值和签名参数

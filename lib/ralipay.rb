@@ -13,7 +13,8 @@ module Ralipay
 
   #初始化参数
   $global_configs = {
-      :secure_type   => 'RSA',
+      :secure_type   => 'MD5',
+      :key           => '',
       :partner       => '',
       :seller_email  => '',
       :notify_url    => '',
@@ -27,41 +28,43 @@ module Ralipay
       :rsa_public_key_path  => ''
   }
 
-  #固定参数,无需修改
-  $service1            = 'alipay.wap.trade.create.direct'
-  $service2            = 'alipay.wap.auth.authAndExecute'
-  $format              = 'xml'
-  $sec_id              = '0001'
-  $input_charset       = 'utf-8'
-  $input_charset_gbk   = 'GBK'
-  $service_pay_channel = 'mobile.merchant.paychannel'
-  $v                   = '2.0'
-
   #wap支付类
   class WapPayment
 
     def initialize(configs)
       #@todo 入参合法性验证
       $global_configs = $global_configs.merge configs
+
+      #固定参数,无需修改
+      $service1            = 'alipay.wap.trade.create.direct'
+      $service2            = 'alipay.wap.auth.authAndExecute'
+      $format              = 'xml'
+      # $sec_id              = '0001'
+      $sec_id              = $global_configs[:secure_type] == 'RSA' ? '0001' : 'MD5'
+      $input_charset       = 'utf-8'
+      $input_charset_gbk   = 'GBK'
+      $service_pay_channel = 'mobile.merchant.paychannel'
+      $v                   = '2.0'
     end
 
     #生成wap支付地址
     def generate_pay_url
       params = {
-          :_input_charset => $input_charset_gbk,
+          # :_input_charset => $input_charset_gbk,
+          :_input_charset => $input_charset,
           :sign_type      => $sec_id,
           :service        => $service_pay_channel,
           :partner        => $global_configs[:partner],
           :out_user       => ''
       }
-      result = Service.new.mobile_merchant_pay_channel params
-
-      begin
-        json = JSON.parse result
-      rescue SignOrVerifyError
-        #验签异常,可能为证书错误,参数初始化错误
-        fail('------SignOrVerifyError------')
-      end
+      # result = Service.new.mobile_merchant_pay_channel params
+      #
+      # begin
+      #   json = JSON.parse result
+      # rescue SignOrVerifyError
+      #   #验签异常,可能为证书错误,参数初始化错误
+      #   fail('------SignOrVerifyError------')
+      # end
 
       #参数及验签正常,继续生成请求支付请求页面url
       #构造请求参数
@@ -97,15 +100,15 @@ module Ralipay
 
       #构造要请求的参数数组，无需改动
       req_hash = {
-          :req_data		   => "<auth_and_execute_req><request_token>" \
+          :req_data       => "<auth_and_execute_req><request_token>" \
                               + token                               \
                               + "</request_token></auth_and_execute_req>",
-          :service		   => $service2,
-          :sec_id		     => $sec_id,
-          :partner		   => $global_configs[:partner],
+          :service       => $service2,
+          :sec_id         => $sec_id,
+          :partner       => $global_configs[:partner],
           :call_back_url => $global_configs[:call_back_url],
-          :format		     => $format,
-          :v				     => $v
+          :format         => $format,
+          :v             => $v
       }
 
       #调用alipay_Wap_Auth_AuthAndExecute接口方法,生成支付地址
