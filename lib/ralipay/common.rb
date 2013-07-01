@@ -22,7 +22,7 @@ module Ralipay::Common
     result_string = ''
     #是否排序
     if sort
-      hash = hash.sort
+      hash = hash.is_a?(Hash) ? hash.with_indifferent_access.sort : hash.sort
     end
 
     hash.each{|key,value|

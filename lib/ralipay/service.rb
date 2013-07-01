@@ -10,9 +10,9 @@ class Service
 
   @@gateway_pay_channel = 'https://mapi.alipay.com/cooperate/gateway.do?'
   @@gateway_order       = 'http://wappaygw.alipay.com/service/rest.htm?'
-  @@my_sign          #签名结果
-  @@parameter        #需要签名的hash
-  @@format           #编码格式
+  @@my_sign          = ''#签名结果
+  @@parameter        = {}#需要签名的hash
+  @@format           = ''#编码格式
   @@req_data = ''    #post请求数据
 
   def initialize
@@ -35,7 +35,7 @@ class Service
                + $sec_id
 
     #请求支付宝接口
-    uri  = URI.parse (@@gateway_pay_channel + @@req_data)
+    uri  = URI.parse(@@gateway_pay_channel + @@req_data)
     http = Net::HTTP.new uri.host, uri.port
     http.use_ssl = true if uri.scheme == 'https'
     path = uri.query.nil? ? uri.path : uri.path + '?' + uri.query
@@ -67,7 +67,7 @@ class Service
   def alipay_wap_trade_create_direct parameter
     #除去数组中的空值和签名参数
     @@parameter = Ralipay::Common::para_filter parameter
-    sort_array  = @@parameter.sort
+    sort_array  = @@parameter.with_indifferent_access.sort
     #生成签名
     @@my_sign = Ralipay::Common::build_sign sort_array
     #创建POST请求数据串
@@ -75,7 +75,7 @@ class Service
                + '&sign='                                              \
                + CGI::escape(@@my_sign)
     #请求支付宝接口
-    uri  = URI.parse (@@gateway_order)
+    uri  = URI.parse(@@gateway_order)
     http = Net::HTTP.new uri.host, uri.port
     request  = Net::HTTP::Post.new(uri.request_uri)
     request.set_body_internal(@@req_data)
@@ -122,7 +122,7 @@ class Service
   def alipay_wap_auth_and_execute parameter
     #除去数组中的空值和签名参数
     @@parameter = Ralipay::Common::para_filter parameter
-    sort_array  = @@parameter.sort
+    sort_array  = @@parameter.with_indifferent_access.sort
     #生成签名
     @@my_sign = Ralipay::Common::build_sign sort_array
     #生成跳转链接
