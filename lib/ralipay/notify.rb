@@ -26,12 +26,21 @@ class Notify
   def notify_verify? posts
     #@todo 入参合法性验证
     #此处为固定顺序，支付宝Notify返回消息通知比较特殊，这里不需要升序排列
-    notify_hash = {
-        :service     => posts[:service],
-        :v           => posts[:v],
-        :sec_id       => posts[:sec_id],
-        :notify_data => posts[:notify_data]
-    }
+    if RUBY_VERSION.to_f < 1.9
+      notify_hash = ActiveSupport::OrderedHash.new
+      notify_hash[:service]     = posts[:service]
+      notify_hash[:v]           = posts[:v]
+      notify_hash[:sec_id]      = posts[:sec_id]
+      notify_hash[:notify_data] = posts[:notify_data]
+    else
+      notify_hash = {
+          :service     => posts[:service],
+          :v           => posts[:v],
+          :sec_id       => posts[:sec_id],
+          :notify_data => posts[:notify_data]
+      }
+    end
+
     #解密notify_data
     notify_hash[:notify_data] = Ralipay::Common::decrypt notify_hash[:notify_data] if $global_configs[:secure_type] == 'RSA'
     sign = posts[:sign]
